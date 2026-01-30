@@ -15,7 +15,7 @@ const RequestCard = ({ request, showDeveloper = false, linkTo }) => {
   return (
     <Link
       to={linkTo || `/developer/requests/${request._id}`}
-      className="card hover:border-primary-500/50 transition-all duration-300 group"
+      className="block bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:border-primary-500/50 transition-all duration-300 group"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
@@ -35,10 +35,12 @@ const RequestCard = ({ request, showDeveloper = false, linkTo }) => {
           </p>
 
           <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-            <div className="flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5" />
-              <span>{request.collectionName}</span>
-            </div>
+            {request.collectionName && request.collectionName !== 'unknown' && (
+              <div className="flex items-center gap-1.5">
+                <Database className="w-3.5 h-3.5" />
+                <span>{request.collectionName}</span>
+              </div>
+            )}
             {showDeveloper && (
               <div className="flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5" />

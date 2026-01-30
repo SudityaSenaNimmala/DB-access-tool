@@ -143,7 +143,9 @@ const AllRequests = () => {
                         <Database className="w-4 h-4 text-slate-500" />
                         <div>
                           <p className="text-slate-200 text-sm">{request.dbInstanceName}</p>
-                          <p className="text-slate-500 text-xs">{request.collectionName}</p>
+                          {request.collectionName && request.collectionName !== 'unknown' && (
+                            <p className="text-slate-500 text-xs">{request.collectionName}</p>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -263,10 +265,12 @@ const AllRequests = () => {
                   <p className="text-xs text-slate-500 uppercase tracking-wide">Database</p>
                   <p className="text-slate-200">{selectedRequest.dbInstanceName}</p>
                 </div>
+                {selectedRequest.collectionName && selectedRequest.collectionName !== 'unknown' && (
                 <div>
                   <p className="text-xs text-slate-500 uppercase tracking-wide">Collection</p>
                   <p className="text-slate-200">{selectedRequest.collectionName}</p>
                 </div>
+              )}
                 <div>
                   <p className="text-xs text-slate-500 uppercase tracking-wide">Query Type</p>
                   <p className="text-slate-200 capitalize">{selectedRequest.queryType}</p>

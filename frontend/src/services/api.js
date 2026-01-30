@@ -33,6 +33,7 @@ export const requestApi = {
   getById: (id) => api.get(`/requests/${id}`),
   approve: (id, comment) => api.post(`/requests/${id}/approve`, { comment }),
   reject: (id, comment) => api.post(`/requests/${id}/reject`, { comment }),
+  resubmit: (id, query) => api.post(`/requests/${id}/resubmit`, { query }),
 };
 
 // User API calls

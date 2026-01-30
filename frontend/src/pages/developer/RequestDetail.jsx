@@ -13,12 +13,18 @@ import {
   MessageSquare,
   CheckCircle,
   XCircle,
+  RefreshCw,
+  Edit3,
 } from 'lucide-react';
 
 const RequestDetail = () => {
   const { id } = useParams();
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedQuery, setEditedQuery] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchRequest();
@@ -28,11 +34,38 @@ const RequestDetail = () => {
     try {
       const response = await requestApi.getById(id);
       setRequest(response.data);
-    } catch (error) {
-      console.error('Fetch request error:', error);
+      setEditedQuery(response.data.query);
+    } catch (err) {
+      console.error('Fetch request error:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResubmit = async () => {
+    if (!editedQuery.trim()) {
+      setError('Query is required');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const response = await requestApi.resubmit(id, editedQuery);
+      setRequest(response.data);
+      setIsEditing(false);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resubmit request');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedQuery(request.query);
+    setError('');
   };
 
   const formatDate = (date) => {
@@ -156,6 +189,7 @@ const RequestDetail = () => {
                   <p className="text-slate-200">{request.dbInstanceName}</p>
                 </div>
               </div>
+              {request.collectionName && request.collectionName !== 'unknown' && (
               <div className="flex items-start gap-3">
                 <Database className="w-5 h-5 text-slate-400 mt-0.5" />
                 <div>
@@ -163,6 +197,7 @@ const RequestDetail = () => {
                   <p className="text-slate-200">{request.collectionName}</p>
                 </div>
               </div>
+            )}
               <div className="flex items-start gap-3">
                 <Database className="w-5 h-5 text-slate-400 mt-0.5" />
                 <div>
@@ -192,8 +227,65 @@ const RequestDetail = () => {
 
         {/* Query */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-slate-200 mb-4">Query</h2>
-          <QueryEditor value={request.query} readOnly height="200px" />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-200">Query</h2>
+            {request.status === 'failed' && !isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors"
+              >
+                <Edit3 className="w-4 h-4" />
+                Edit Query
+              </button>
+            )}
+          </div>
+          
+          {isEditing ? (
+            <>
+              <QueryEditor 
+                value={editedQuery} 
+                onChange={setEditedQuery}
+                readOnly={false} 
+                height="200px" 
+                language="javascript" 
+              />
+              
+              {error && (
+                <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+              
+              <div className="flex items-center gap-3 mt-4">
+                <button
+                  onClick={handleResubmit}
+                  disabled={submitting}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Resubmitting...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      Resubmit Request
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={submitting}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <QueryEditor value={request.query} readOnly height="200px" language="javascript" />
+          )}
         </div>
 
         {/* Review Comment */}

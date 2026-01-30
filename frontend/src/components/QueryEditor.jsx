@@ -1,6 +1,6 @@
 import Editor from '@monaco-editor/react';
 
-const QueryEditor = ({ value, onChange, readOnly = false, height = '200px' }) => {
+const QueryEditor = ({ value, onChange, readOnly = false, height = '200px', language = 'javascript' }) => {
   const handleEditorChange = (value) => {
     if (onChange) {
       onChange(value);
@@ -11,7 +11,7 @@ const QueryEditor = ({ value, onChange, readOnly = false, height = '200px' }) =>
     <div className="rounded-xl overflow-hidden border border-slate-600">
       <Editor
         height={height}
-        defaultLanguage="json"
+        defaultLanguage={language}
         value={value}
         onChange={handleEditorChange}
         theme="vs-dark"

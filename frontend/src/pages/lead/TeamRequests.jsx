@@ -124,10 +124,12 @@ const TeamRequests = () => {
                         <User className="w-3.5 h-3.5" />
                         <span>{request.developerName}</span>
                       </div>
+                      {request.collectionName && request.collectionName !== 'unknown' && (
                       <div className="flex items-center gap-1.5">
                         <Database className="w-3.5 h-3.5" />
                         <span>{request.collectionName}</span>
                       </div>
+                    )}
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" />
                         <span>{formatDate(request.createdAt)}</span>

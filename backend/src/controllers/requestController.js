@@ -7,20 +7,19 @@ import queryExecutor from '../services/queryExecutor.js';
 // Create a new request
 export const createRequest = async (req, res) => {
   try {
-    const { dbInstanceId, reason, query, queryType, teamLeadId } = req.body;
+    const { dbInstanceId, reason, query, teamLeadId } = req.body;
 
-    // Parse query to extract collection name
-    let parsedQuery;
-    try {
-      parsedQuery = JSON.parse(query);
-    } catch (e) {
-      return res.status(400).json({ message: 'Invalid JSON in query' });
+    if (!query || !query.trim()) {
+      return res.status(400).json({ message: 'Query is required' });
     }
 
-    const collectionName = parsedQuery.collection;
-    if (!collectionName) {
-      return res.status(400).json({ message: 'Collection name must be specified in query JSON' });
-    }
+    // Extract collection name from query (e.g., db.users.find() -> users)
+    const collectionMatch = query.match(/db\.(\w+)\./);
+    const collectionName = collectionMatch ? collectionMatch[1] : 'unknown';
+
+    // Determine query type from the method
+    const methodMatch = query.match(/db\.\w+\.(\w+)\s*\(/);
+    const queryType = methodMatch ? methodMatch[1] : 'custom';
 
     // Validate DB instance exists and is active
     const dbInstance = await DBInstance.findById(dbInstanceId);
@@ -301,6 +300,75 @@ export const getAllRequests = async (req, res) => {
       },
     });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Resubmit a failed request (developer only)
+export const resubmitRequest = async (req, res) => {
+  try {
+    const { query } = req.body;
+    
+    const request = await Request.findById(req.params.id);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Check if user is the owner of this request
+    if (request.developerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to resubmit this request' });
+    }
+
+    // Only allow resubmission of failed requests
+    if (request.status !== 'failed') {
+      return res.status(400).json({ message: 'Only failed requests can be resubmitted' });
+    }
+
+    if (!query || !query.trim()) {
+      return res.status(400).json({ message: 'Query is required' });
+    }
+
+    // Extract collection name from query
+    const collectionMatch = query.match(/db\.(\w+)\./);
+    const collectionName = collectionMatch ? collectionMatch[1] : 'unknown';
+
+    // Determine query type from the method
+    const methodMatch = query.match(/db\.\w+\.(\w+)\s*\(/);
+    const queryType = methodMatch ? methodMatch[1] : 'custom';
+
+    // Update the request with new query and reset status to pending
+    request.query = query;
+    request.collectionName = collectionName;
+    request.queryType = queryType;
+    request.status = 'pending';
+    request.error = null;
+    request.result = null;
+    request.reviewComment = null;
+    request.reviewedAt = null;
+    request.executedAt = null;
+    request.resubmittedAt = new Date();
+    await request.save();
+
+    // Get team lead for notification
+    const teamLead = await User.findById(request.teamLeadId);
+
+    // Notify team lead via email
+    await emailService.notifyTeamLeadNewRequest(teamLead, request, req.user);
+
+    // Emit socket event for real-time update
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${request.teamLeadId}`).emit('new_request', {
+        requestId: request._id,
+        developerName: req.user.name,
+        dbInstanceName: request.dbInstanceName,
+        isResubmission: true,
+      });
+    }
+
+    res.json(request);
+  } catch (error) {
+    console.error('Resubmit request error:', error);
     res.status(500).json({ message: error.message });
   }
 };

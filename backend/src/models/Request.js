@@ -35,12 +35,11 @@ const requestSchema = new mongoose.Schema(
     },
     collectionName: {
       type: String,
-      required: true,
+      default: 'unknown',
     },
     queryType: {
       type: String,
-      enum: ['find', 'findOne', 'aggregate', 'insertOne', 'insertMany', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'count', 'distinct'],
-      required: true,
+      default: 'custom',
     },
     teamLeadId: {
       type: mongoose.Schema.Types.ObjectId,

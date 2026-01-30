@@ -170,6 +170,7 @@ const ReviewRequest = () => {
                   <p className="text-slate-200">{request.dbInstanceName}</p>
                 </div>
               </div>
+              {request.collectionName && request.collectionName !== 'unknown' && (
               <div className="flex items-start gap-3">
                 <Database className="w-5 h-5 text-slate-400 mt-0.5" />
                 <div>
@@ -177,6 +178,7 @@ const ReviewRequest = () => {
                   <p className="text-slate-200">{request.collectionName}</p>
                 </div>
               </div>
+            )}
             </div>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
@@ -203,7 +205,7 @@ const ReviewRequest = () => {
         {/* Query */}
         <div className="card">
           <h2 className="text-lg font-semibold text-slate-200 mb-4">Query to Execute</h2>
-          <QueryEditor value={request.query} readOnly height="250px" />
+          <QueryEditor value={request.query} readOnly height="250px" language="javascript" />
         </div>
 
         {/* Action Buttons for Pending Requests */}

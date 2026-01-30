@@ -81,14 +81,8 @@ const MyRequests = () => {
       ) : requests.length > 0 ? (
         <>
           <div className="grid gap-4">
-            {requests.map((request, index) => (
-              <div
-                key={request._id}
-                className="animate-slide-up"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <RequestCard request={request} />
-              </div>
+            {requests.map((request) => (
+              <RequestCard key={request._id} request={request} />
             ))}
           </div>
 
